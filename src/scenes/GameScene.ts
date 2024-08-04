@@ -27,6 +27,8 @@ class GameScene extends Phaser.Scene {
             loop: true,
             volume: 0.2
         });
+
+        console.log('Attempting to play background music');
         this.backgroundMusic.play();
 
         this.moveSound = this.sound.add('moveSound', {
@@ -37,6 +39,7 @@ class GameScene extends Phaser.Scene {
     }
 
     moveBear(pointer: Phaser.Input.Pointer) {
+        console.log('Move bear called');
         if (this.moveSound.isPlaying) {
             this.moveSound.stop();
         }
@@ -58,6 +61,7 @@ class GameScene extends Phaser.Scene {
     }
 
     update() {
+        // No need for continuous update logic here
     }
 }
 
