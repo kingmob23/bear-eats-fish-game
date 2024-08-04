@@ -7,5 +7,6 @@ cat ~/game_server.log
 
 cat ~/scripts/start_game_server.sh
 
-# run locally
+# build and run locally
+npx webpack --config webpack.config.js --mode production
 npx webpack serve
