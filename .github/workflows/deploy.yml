@@ -11,10 +11,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '20'
 
@@ -28,7 +28,7 @@ jobs:
         run: ls -l dist
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: dist
           path: dist
@@ -39,10 +39,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Download artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: dist
 
@@ -50,7 +50,7 @@ jobs:
         run: ls -l dist
 
       - name: Clean up previous build
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
@@ -59,7 +59,7 @@ jobs:
             rm -rf /var/www/game/dist/*
 
       - name: Deploy to VPS
-        uses: appleboy/scp-action@master
+        uses: appleboy/scp-action@v0.1.5
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
@@ -71,7 +71,7 @@ jobs:
           command_timeout: 10m
           use_insecure_cipher: false
           rm: false
-          debug: true  # Enable debug mode to get more detailed logs
+          debug: true
           strip_components: 1
           overwrite: true
           tar_dereference: false
@@ -81,7 +81,7 @@ jobs:
           proxy_use_insecure_cipher: false
 
       - name: Restart Game Server
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
