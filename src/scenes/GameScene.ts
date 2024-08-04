@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 
 class GameScene extends Phaser.Scene {
     private bear!: Phaser.GameObjects.Sprite;
+    private backgroundMusic!: Phaser.Sound.BaseSound;
+    private moveSound!: Phaser.Sound.BaseSound;
 
     constructor() {
         super({ key: 'GameScene' });
@@ -10,6 +12,8 @@ class GameScene extends Phaser.Scene {
     preload() {
         this.load.image('bear', 'assets/images/cute-bear.webp');
         this.load.image('background', 'assets/images/background.webp');
+        this.load.audio('backgroundMusic', 'assets/audio/background.mp3');
+        this.load.audio('moveSound', 'assets/audio/move.mp3');
     }
 
     create() {
@@ -20,9 +24,18 @@ class GameScene extends Phaser.Scene {
         console.log('Game scene created');
 
         this.input.on('pointerdown', this.moveBear, this);
+
+        this.backgroundMusic = this.sound.add('backgroundMusic', {
+            loop: true,
+            volume: 0.5
+        });
+        this.backgroundMusic.play();
+
+        this.moveSound = this.sound.add('moveSound');
     }
 
     moveBear(pointer: Phaser.Input.Pointer) {
+        this.moveSound.play();
         this.tweens.add({
             targets: this.bear,
             x: pointer.x,
