@@ -17,6 +17,7 @@ class GameScene extends Phaser.Scene {
     }
 
     create() {
+        console.log('GameScene create');
         const background = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'background');
         background.setDisplaySize(this.cameras.main.width, this.cameras.main.height);
 
