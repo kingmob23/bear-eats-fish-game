@@ -13,7 +13,7 @@ class GameScene extends Phaser.Scene {
         this.load.image('bear', 'assets/images/cute-bear.webp');
         this.load.image('background', 'assets/images/background.webp');
         this.load.audio('backgroundMusic', 'assets/audio/background.mp3');
-        this.load.audio('moveSound', 'assets/audio/move_cropped.mp3');
+        this.load.audio('moveSound', 'assets/audio/move.mp3');
     }
 
     create() {
