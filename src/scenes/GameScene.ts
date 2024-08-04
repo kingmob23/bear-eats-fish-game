@@ -13,15 +13,26 @@ class GameScene extends Phaser.Scene {
     }
 
     create() {
-        const background = this.add.image(400, 300, 'background');
-        background.setDisplaySize(800, 600);
+        const background = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'background');
+        background.setDisplaySize(this.cameras.main.width, this.cameras.main.height);
 
-        this.bear = this.add.sprite(400, 300, 'bear');
+        this.bear = this.add.sprite(this.cameras.main.width / 2, this.cameras.main.height / 2, 'bear');
         console.log('Game scene created');
+
+        this.input.on('pointerdown', this.moveBear, this);
+    }
+
+    moveBear(pointer: Phaser.Input.Pointer) {
+        this.tweens.add({
+            targets: this.bear,
+            x: pointer.x,
+            y: pointer.y,
+            duration: 500,
+            ease: 'Power2'
+        });
     }
 
     update() {
-        this.bear.x += 1;
     }
 }
 
