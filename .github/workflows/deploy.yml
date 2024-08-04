@@ -16,7 +16,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '22'
+          node-version: '20'
 
       - name: Install dependencies
         run: npm install
@@ -51,3 +51,11 @@ jobs:
           key: ${{ secrets.VPS_KEY }}
           source: "dist/*"
           target: "/var/www/game"
+
+      - name: Restart Game Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          script: "~/scripts/start_game_server.sh"
