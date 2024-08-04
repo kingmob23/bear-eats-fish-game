@@ -23,15 +23,17 @@ class GameScene extends Phaser.Scene {
         this.bear = this.add.sprite(this.cameras.main.width / 2, this.cameras.main.height / 2, 'bear');
         console.log('Game scene created');
 
-        this.input.on('pointerdown', this.moveBear, this);
-
         this.backgroundMusic = this.sound.add('backgroundMusic', {
             loop: true,
-            volume: 0.5
+            volume: 0.2
         });
         this.backgroundMusic.play();
 
-        this.moveSound = this.sound.add('moveSound');
+        this.moveSound = this.sound.add('moveSound', {
+            volume: 1.0
+        });
+
+        this.input.on('pointerdown', this.moveBear, this);
     }
 
     moveBear(pointer: Phaser.Input.Pointer) {
