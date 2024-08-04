@@ -6,9 +6,11 @@ class StartScene extends Phaser.Scene {
     }
 
     preload() {
+
     }
 
     create() {
+        console.log('StartScene create');
         const startText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 'Tap to Start', {
             fontSize: '32px',
             color: '#fff'
