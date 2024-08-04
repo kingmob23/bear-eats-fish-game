@@ -18,6 +18,9 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Clear old dist directory
+        run: rm -rf dist/*
+
       - name: Install dependencies
         run: npm install
 
@@ -49,7 +52,7 @@ jobs:
       - name: Verify download
         run: ls -l dist
 
-      - name: Clean up previous build
+      - name: Clean up previous build on server
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.VPS_HOST }}
