@@ -19,16 +19,27 @@ jobs:
           node-version: '20'
 
       - name: Clear old dist directory
-        run: rm -rf dist/*
+        run: |
+          echo "Clearing old dist directory"
+          rm -rf dist/*
+          ls -l dist || echo "dist directory does not exist yet"
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          echo "Installing dependencies"
+          npm install
 
       - name: Build project
-        run: npx webpack --config webpack.config.js --mode production
+        run: |
+          echo "Building project"
+          npx webpack --config webpack.config.js --mode production
+          echo "Build finished"
 
       - name: Verify build output
-        run: ls -l dist
+        run: |
+          echo "Verifying build output"
+          ls -l dist
+          ls -l dist/assets/images
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -50,7 +61,9 @@ jobs:
           name: dist
 
       - name: Verify download
-        run: ls -l dist
+        run: |
+          echo "Verifying downloaded artifact"
+          ls -l dist
 
       - name: Clean up previous build on server
         uses: appleboy/ssh-action@v0.1.5
@@ -59,6 +72,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           script: |
+            echo "Cleaning up previous build on server"
             rm -rf /var/www/game/dist/*
 
       - name: Deploy to VPS
