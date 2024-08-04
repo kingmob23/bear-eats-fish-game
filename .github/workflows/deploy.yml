@@ -24,6 +24,9 @@ jobs:
       - name: Build project
         run: npx webpack --config webpack.config.js
 
+      - name: Verify build output
+        run: ls -l dist
+
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
@@ -35,10 +38,16 @@ jobs:
     needs: build
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Download artifact
         uses: actions/download-artifact@v2
         with:
           name: dist
+
+      - name: Verify download
+        run: ls -l dist
 
       - name: Deploy to VPS
         uses: appleboy/scp-action@master
@@ -48,6 +57,19 @@ jobs:
           key: ${{ secrets.VPS_KEY }}
           source: "dist/*"
           target: "/var/www/game/dist"
+          port: 22
+          timeout: 30s
+          command_timeout: 10m
+          use_insecure_cipher: false
+          rm: false
+          debug: false
+          strip_components: 0
+          overwrite: false
+          tar_dereference: false
+          tar_exec: tar
+          proxy_port: 22
+          proxy_timeout: 30s
+          proxy_use_insecure_cipher: false
 
       - name: Restart Game Server
         uses: appleboy/ssh-action@master
