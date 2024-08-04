@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
 import GameScene from './scenes/GameScene';
+import StartScene from './scenes/StartScene';
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
     width: window.innerWidth,
     height: window.innerHeight,
-    scene: [GameScene],
+    scene: [StartScene, GameScene],
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
