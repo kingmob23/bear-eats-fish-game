@@ -105,10 +105,12 @@ jobs:
           proxy_timeout: 30s
           proxy_use_insecure_cipher: false
 
-      - name: Restart Game Server
+      - name: Reload Nginx
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
-          script: "~/scripts/start_game_server.sh"
+          script: |
+            echo "Reloading Nginx"
+            systemctl reload nginx
