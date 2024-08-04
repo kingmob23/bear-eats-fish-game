@@ -22,7 +22,7 @@ jobs:
         run: npm install
 
       - name: Build project
-        run: npx webpack --config webpack.config.js
+        run: npx webpack --config webpack.config.js --mode production
 
       - name: Verify build output
         run: ls -l dist

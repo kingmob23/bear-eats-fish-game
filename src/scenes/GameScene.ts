@@ -9,7 +9,7 @@ class GameScene extends Phaser.Scene {
 
     preload() {
         this.load.image('bear', 'assets/images/cute-bear.png');
-        this.load.image('background', 'assets/images/background.png');
+        this.load.image('background', 'assets/images/background.webp');
     }
 
     create() {
