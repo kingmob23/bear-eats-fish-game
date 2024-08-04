@@ -5,4 +5,7 @@ systemctl reload nginx
 
 cat ~/game_server.log
 
+cat ~/scripts/start_game_server.sh
+
+# run locally
 npx webpack serve

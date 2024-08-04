@@ -64,15 +64,15 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
-          source: "dist/*"
-          target: "/var/www/game/dist"
+          source: "dist/"
+          target: "/var/www/game/dist/"
           port: 22
           timeout: 30s
           command_timeout: 10m
           use_insecure_cipher: false
           rm: false
-          debug: true
-          strip_components: 0
+          debug: true  # Enable debug mode to get more detailed logs
+          strip_components: 1
           overwrite: true
           tar_dereference: false
           tar_exec: tar
