@@ -1,4 +1,3 @@
-// main.ts
 import Phaser from 'phaser';
 import GameScene from './scenes/GameScene';
 

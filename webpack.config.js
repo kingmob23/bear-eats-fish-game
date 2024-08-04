@@ -16,6 +16,9 @@ module.exports = {
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
+    alias: {
+      phaser: path.resolve(__dirname, 'node_modules/phaser/dist/phaser.js')
+    }
   },
   output: {
     filename: 'bundle.js',
@@ -23,7 +26,8 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: 'index.html',
+      template: './index.html',
+      inject: 'body'
     }),
     new CopyWebpackPlugin({
       patterns: [
