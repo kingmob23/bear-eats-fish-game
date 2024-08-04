@@ -47,6 +47,12 @@ jobs:
           name: dist
           path: dist
 
+      - name: Verify artifact upload
+        run: |
+          echo "Verifying artifact upload"
+          ls -l dist
+          ls -l dist/assets/images
+
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -60,10 +66,11 @@ jobs:
         with:
           name: dist
 
-      - name: Verify download
+      - name: Verify downloaded artifact
         run: |
           echo "Verifying downloaded artifact"
           ls -l dist
+          ls -l dist/assets/images
 
       - name: Clean up previous build on server
         uses: appleboy/ssh-action@v0.1.5
