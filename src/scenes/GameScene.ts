@@ -19,6 +19,7 @@ class GameScene extends Phaser.Scene {
     private buttonActive: boolean;
 
     private fishArray: Fish[] = [];
+
     private stoveFishPending: boolean;
 
     private eventEmitter: EventEmitter;
