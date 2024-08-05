@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   width="100px"
+   height="100px"
+   viewBox="53 69 140 140"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+   sodipodi:docname="action_button.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient2"
+       inkscape:collect="always">
+      <stop
+         style="stop-color:#ff9955;stop-opacity:1;"
+         offset="0"
+         id="stop2" />
+      <stop
+         style="stop-color:#ff9249;stop-opacity:0.38403043;"
+         offset="1"
+         id="stop3" />
+    </linearGradient>
+    <inkscape:path-effect
+       effect="offset"
+       id="path-effect2"
+       is_visible="true"
+       lpeversion="1.2"
+       linejoin_type="miter"
+       unit="mm"
+       offset="5"
+       miter_limit="4"
+       attempt_force_join="false"
+       update_on_knot_move="true" />
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2"
+       id="radialGradient3"
+       cx="123.2096"
+       cy="139.20525"
+       fx="123.2096"
+       fy="139.20525"
+       r="60.091702"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="fill:#ff8080;fill-opacity:1;stroke:none;stroke-width:0.264999;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="circle2"
+       inkscape:path-effect="#path-effect2"
+       sodipodi:type="arc"
+       sodipodi:cx="123.2096"
+       sodipodi:cy="139.20525"
+       sodipodi:rx="60.091702"
+       sodipodi:ry="60.091702"
+       d="m 123.20898,74.113281 c -35.974317,0 -65.091793,29.117479 -65.091793,65.091799 0,35.97432 29.117476,65.09179 65.091793,65.09179 35.97433,0 65.0918,-29.11747 65.0918,-65.09179 0,-35.97432 -29.11747,-65.091799 -65.0918,-65.091799 z" />
+    <circle
+       style="fill:url(#radialGradient3);fill-opacity:1;stroke:none;stroke-width:0.264999;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="path1"
+       cx="123.2096"
+       cy="139.20525"
+       r="60.091702" />
+  </g>
+</svg>

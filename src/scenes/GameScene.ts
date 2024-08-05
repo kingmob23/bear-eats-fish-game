@@ -17,19 +17,16 @@ class GameScene extends Phaser.Scene {
     }
 
     create() {
-        console.log('GameScene create');
         const background = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'background');
         background.setDisplaySize(this.cameras.main.width, this.cameras.main.height);
 
         this.bear = this.add.sprite(this.cameras.main.width / 2, this.cameras.main.height / 2, 'bear');
-        console.log('Game scene created');
 
         this.backgroundMusic = this.sound.add('backgroundMusic', {
             loop: true,
             volume: 0.2
         });
 
-        console.log('Attempting to play background music');
         this.backgroundMusic.play();
 
         this.moveSound = this.sound.add('moveSound', {
@@ -40,10 +37,11 @@ class GameScene extends Phaser.Scene {
     }
 
     moveBear(pointer: Phaser.Input.Pointer) {
-        console.log('Move bear called');
-        if (this.moveSound.isPlaying) {
-            this.moveSound.stop();
-        }
+        // if (this.moveSound.isPlaying) {
+        //     this.moveSound.stop();
+        // }
+        // The moveBear method stops the sound if it is already playing before starting it again. This ensures that the sound effect starts from the beginning each time the bear moves.
+        // But it actually acts the same without it.
         this.moveSound.play({
             volume: 3.0
         });
