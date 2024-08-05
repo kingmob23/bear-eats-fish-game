@@ -85,7 +85,7 @@ class GameScene extends Phaser.Scene {
             loop: true,
             volume: 0.2
         });
-        // this.backgroundMusic.play();
+        this.backgroundMusic.play();
 
         this.moveSound = this.sound.add('moveSound', { volume: 1.0 });
         this.splashSound = this.sound.add('splashSound', { volume: 0.1 });
@@ -135,7 +135,7 @@ class GameScene extends Phaser.Scene {
         this.splash.setPosition(this.screenWidth / 4, this.screenHeight - this.screenHeight / 4);
         this.splash.setVisible(true);
         this.backgroundMusic.pause();
-        // this.splashSound.play();
+        this.splashSound.play();
 
         this.setButtonActive(true);
     }
@@ -172,7 +172,7 @@ class GameScene extends Phaser.Scene {
         if (this.splashSound.isPlaying) {
             this.splashSound.stop();
         };
-        // this.backgroundMusic.resume();
+        this.backgroundMusic.resume();
         this.spawnFish();
         this.scheduleNextSplash(4000, 10000);
     }
