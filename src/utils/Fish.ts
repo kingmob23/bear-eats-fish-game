@@ -1,3 +1,4 @@
+import EventEmitter from 'events';
 import Phaser from 'phaser';
 
 class Fish extends Phaser.GameObjects.Sprite {
@@ -6,8 +7,10 @@ class Fish extends Phaser.GameObjects.Sprite {
     private stove: Phaser.GameObjects.Sprite;
     private screenHeight: number;
     private screenWidth: number;
+    private eventEmitter: EventEmitter;
+    private pickSound: Phaser.Sound.BaseSound
 
-    constructor(scene: Phaser.Scene, x: number, y: number, texture: string, stove: Phaser.GameObjects.Sprite, screenHeight: number, screenWidth: number) {
+    constructor(scene: Phaser.Scene, x: number, y: number, texture: string, stove: Phaser.GameObjects.Sprite, screenHeight: number, screenWidth: number, eventEmitter: EventEmitter, pickSound: Phaser.Sound.BaseSound) {
         super(scene, x, y, texture);
         this.scene = scene;
         this.isDragging = false;
@@ -15,6 +18,8 @@ class Fish extends Phaser.GameObjects.Sprite {
         this.stove = stove;
         this.screenHeight = screenHeight;
         this.screenWidth = screenWidth;
+        this.eventEmitter = eventEmitter;
+        this.pickSound = pickSound;
         scene.add.existing(this);
         this.setScale(0.3);
     }
@@ -23,6 +28,7 @@ class Fish extends Phaser.GameObjects.Sprite {
         this.setInteractive({ draggable: true });
 
         this.on('dragstart', (pointer: Phaser.Input.Pointer) => {
+            if (this.scene.tweens.isTweening(this)) return;
             this.setScale(0.3);
             this.isDragging = true;
         });
@@ -43,18 +49,21 @@ class Fish extends Phaser.GameObjects.Sprite {
         const stoveBounds = this.stove.getBounds();
 
         if (this.state === 'raw' && Phaser.Geom.Intersects.RectangleToRectangle(fishBounds, stoveBounds)) {
-            this.cook();
+            this.fry();
         } else {
-            this.moveToBorder({ closest: true, enableDragging: true });
+            this.moveToBorder(true);
         }
     }
 
-    cook() {
-        this.setTexture('steak');
+    fry() {
+        this.setVisible(false);
         this.state = 'steak';
+        this.eventEmitter.emit('fishFried');
     }
 
-    moveToBorder({ closest = false, enableDragging = false }: { closest?: boolean, enableDragging?: boolean }) {
+    moveToBorder(closest: boolean) {
+        this.pickSound.play();
+
         const fishHeight = this.displayHeight / 2;
         const fishWidth = this.displayWidth / 2;
 
@@ -89,9 +98,7 @@ class Fish extends Phaser.GameObjects.Sprite {
             ease: 'Power2',
             scale: 0.5,
             onComplete: () => {
-                if (enableDragging) {
-                    this.enableDragging();
-                }
+                this.enableDragging();
             }
         });
     }

@@ -1,3 +1,4 @@
+import EventEmitter from 'events';
 import Phaser from 'phaser';
 import Fish from '../utils/Fish';
 
@@ -10,6 +11,7 @@ class GameScene extends Phaser.Scene {
     private backgroundMusic!: Phaser.Sound.BaseSound;
     private moveSound!: Phaser.Sound.BaseSound;
     private splashSound!: Phaser.Sound.BaseSound;
+    private pickSound!: Phaser.Sound.BaseSound;
 
     private screenWidth!: number;
     private screenHeight!: number;
@@ -17,10 +19,19 @@ class GameScene extends Phaser.Scene {
     private buttonActive: boolean;
 
     private fishArray: Fish[] = [];
+    private stoveFishPending: boolean;
+
+    private eventEmitter: EventEmitter;
 
     constructor() {
         super({ key: 'GameScene' });
         this.buttonActive = false;
+        this.stoveFishPending = false;
+        this.eventEmitter = new EventEmitter();
+
+        this.eventEmitter.on('fishFried', () => {
+            this.stoveFishPending = true;
+        });
     }
 
     preload() {
@@ -34,6 +45,7 @@ class GameScene extends Phaser.Scene {
         this.load.audio('backgroundMusic', 'assets/audio/background.mp3');
         this.load.audio('moveSound', 'assets/audio/move.mp3');
         this.load.audio('splashSound', 'assets/audio/splash-sound.mp3');
+        this.load.audio('pickSound', 'assets/audio/pick.mp3');
 
         this.load.image('actionButton', 'assets/interface/action-button.svg');
     }
@@ -44,6 +56,7 @@ class GameScene extends Phaser.Scene {
 
         const background = this.add.image(this.screenWidth / 2, this.screenHeight / 2, 'background');
         background.setDisplaySize(this.screenWidth, this.screenHeight);
+        background.setDepth(-1)
 
         this.bear = this.add.sprite(this.screenWidth / 2, this.screenHeight / 2, 'bear');
 
@@ -76,15 +89,17 @@ class GameScene extends Phaser.Scene {
 
         this.moveSound = this.sound.add('moveSound', { volume: 1.0 });
         this.splashSound = this.sound.add('splashSound', { volume: 0.1 });
+        this.pickSound = this.sound.add('pickSound', { volume: 1.0 });
 
         this.input.on('pointerdown', this.moveBear, this);
 
         this.setButtonActive(false);
+
         this.scheduleNextSplash(2500, 5000);
     }
 
     moveBear(pointer: Phaser.Input.Pointer) {
-        if (!pointer || this.buttonActive || this.isAnyFishDragging()) return;
+        if (this.isAnyFishDragging()) return;
 
         this.moveSound.play({ volume: 3.0 });
         this.tweens.add({
@@ -94,9 +109,7 @@ class GameScene extends Phaser.Scene {
             duration: 500,
             ease: 'Power2',
             onComplete: () => {
-                if (this.moveSound.isPlaying) {
-                    this.moveSound.stop();
-                }
+                this.moveSound.stop();
             }
         });
     }
@@ -129,12 +142,19 @@ class GameScene extends Phaser.Scene {
 
     onActionButtonClick(pointer: Phaser.Input.Pointer, localX: number, localY: number, event: Phaser.Types.Input.EventData) {
         if (this.buttonActive) {
+            this.setButtonActive(false);
             event.stopPropagation();
-            if (this.isSplashInteraction()) {
+
+            const distanceToSplash = Phaser.Math.Distance.Between(this.bear.x, this.bear.y, this.splash.x, this.splash.y);
+            const distanceToStove = Phaser.Math.Distance.Between(this.bear.x, this.bear.y, this.stove.x, this.stove.y);
+            const activationDistance = this.bear.displayHeight;
+
+            if (distanceToSplash <= activationDistance && this.isSplashInteraction()) {
                 this.handleSplashInteraction();
+            } else if (distanceToStove <= activationDistance && this.isStoveInteraction()) {
+                this.handleStoveInteraction();
             } else {
-                console.log('Button clicked!');
-                // Placeholder for future interactions
+                console.log('Button clicked but no valid interaction found!');
             }
         }
     }
@@ -143,41 +163,49 @@ class GameScene extends Phaser.Scene {
         return this.splash.visible;
     }
 
+    isStoveInteraction(): boolean {
+        return this.stoveFishPending;
+    }
+
     handleSplashInteraction() {
         this.splash.setVisible(false);
         if (this.splashSound.isPlaying) {
             this.splashSound.stop();
-        }
+        };
         // this.backgroundMusic.resume();
-        this.setButtonActive(false);
         this.spawnFish();
         this.scheduleNextSplash(4000, 10000);
+    }
+
+    handleStoveInteraction() {
+        this.setButtonActive(false);
+        this.stoveFishPending = false;
+        const friedFish = this.fishArray.find(fish => fish.state === 'steak' && !fish.visible);
+        if (friedFish) {
+            friedFish.setTexture('steak');
+            friedFish.setVisible(true);
+            friedFish.moveToBorder(false);
+        }
     }
 
     spawnFish() {
         const fishOffsetX = Phaser.Math.Between(-50, 50);
         const fishOffsetY = Phaser.Math.Between(-50, 50);
 
-        const fish = new Fish(this, this.bear.x + fishOffsetX, this.bear.y + fishOffsetY, 'fish', this.stove, this.screenHeight, this.screenWidth);
+        const fish = new Fish(this, this.bear.x + fishOffsetX, this.bear.y + fishOffsetY, 'fish', this.stove, this.screenHeight, this.screenWidth, this.eventEmitter, this.pickSound);
         this.fishArray.push(fish);
 
-        fish.moveToBorder({ closest: false, enableDragging: true });
+        fish.moveToBorder(false);
     }
 
     update() {
-        if (this.splash.visible) {
-            const distance = Phaser.Math.Distance.Between(
-                this.bear.x, this.bear.y,
-                this.splash.x, this.splash.y
-            );
-            const activationDistance = this.splash.displayHeight;
-            const isActive = distance <= activationDistance;
-            this.setButtonActive(isActive);
+        const isActive = this.splash.visible || this.stoveFishPending;
 
-            const isBearBehind = this.bear.y > this.splash.y;
-            this.bear.setDepth(isBearBehind ? 1 : 0);
-            this.splash.setDepth(isBearBehind ? 0 : 1);
-        }
+        this.setButtonActive(isActive);
+
+        const isBearBehind = this.bear.y > this.splash.y;
+        this.bear.setDepth(isBearBehind ? 1 : 0);
+        this.splash.setDepth(isBearBehind ? 0 : 1);
     }
 }
 
