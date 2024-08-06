@@ -5,7 +5,7 @@ class Fish extends Phaser.GameObjects.Sprite {
     isDragging: boolean;
     state: 'raw' | 'steak' | 'unbaked' | 'cake';
     private stove: Phaser.GameObjects.Sprite;
-    private table: Phaser.GameObjects.Sprite;
+    private tableBounds: Phaser.Geom.Rectangle;
     private screenHeight: number;
     private screenWidth: number;
     private pickSound: Phaser.Sound.BaseSound;
@@ -14,13 +14,14 @@ class Fish extends Phaser.GameObjects.Sprite {
     private moveBear: (pointer: Phaser.Input.Pointer) => void;
     static stovePending: boolean = false;
     static tableSteakPending: boolean = false;
+    private partyMode: boolean = false;
 
     constructor(
         scene: Phaser.Scene,
         x: number,
         y: number,
         stove: Phaser.GameObjects.Sprite,
-        table: Phaser.GameObjects.Sprite,
+        tableBounds: Phaser.Geom.Rectangle,
         screenHeight: number,
         screenWidth: number,
         pickSound: Phaser.Sound.BaseSound,
@@ -33,7 +34,7 @@ class Fish extends Phaser.GameObjects.Sprite {
         this.isDragging = false;
         this.state = 'raw';
         this.stove = stove;
-        this.table = table;
+        this.tableBounds = tableBounds;
         this.screenHeight = screenHeight;
         this.screenWidth = screenWidth;
         this.pickSound = pickSound;
@@ -44,14 +45,24 @@ class Fish extends Phaser.GameObjects.Sprite {
         this.setScale(0.3);
     }
 
+    setPartyMode() {
+        this.partyMode = true;
+    }
+
     enableDragging() {
+        if (this.partyMode) {
+            console.log('enableDragging: partyMode enabled')
+            return;
+        }
+
         this.setInteractive({ draggable: true });
 
         this.on('dragstart', (pointer: Phaser.Input.Pointer) => {
             if (this.scene.tweens.isTweening(this)) return;
-            this.setScale(0.3);
-            this.isDragging = true;
             this.scene.input.off('pointerdown', this.moveBear, this.scene);
+            this.isDragging = true;
+            this.setScale(0.3);
+            console.log('enableDragging: dragstart occured')
         });
 
         this.on('drag', (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
@@ -69,11 +80,10 @@ class Fish extends Phaser.GameObjects.Sprite {
     onDragEnd() {
         const fishBounds = this.getBounds();
         const stoveBounds = this.stove.getBounds();
-        const tableBounds = this.table.getBounds();
 
         if (this.state === 'raw' && Phaser.Geom.Intersects.RectangleToRectangle(fishBounds, stoveBounds) && !Fish.stovePending) {
             this.fry();
-        } else if (this.state === 'steak' && Phaser.Geom.Intersects.RectangleToRectangle(fishBounds, tableBounds)) {
+        } else if (this.state === 'steak' && Phaser.Geom.Intersects.RectangleToRectangle(fishBounds, this.tableBounds)) {
             this.coverInDough();
         } else if (this.state === 'unbaked' && Phaser.Geom.Intersects.RectangleToRectangle(fishBounds, stoveBounds) && !Fish.stovePending) {
             this.bake();
@@ -144,6 +154,7 @@ class Fish extends Phaser.GameObjects.Sprite {
             }
         });
     }
+
 }
 
 export default Fish;

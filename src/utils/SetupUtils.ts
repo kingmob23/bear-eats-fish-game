@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
 
-export function createBackground(scene: Phaser.Scene, screenWidth: number, screenHeight: number): void {
-    const background = scene.add.image(screenWidth / 2, screenHeight / 2, 'background');
+export function createBackground(scene: Phaser.Scene, screenWidth: number, screenHeight: number): Phaser.GameObjects.Sprite {
+    const background = scene.add.sprite(screenWidth / 2, screenHeight / 2, 'background');
     background.setDisplaySize(screenWidth, screenHeight);
     background.setDepth(-1);
+    return background;
 }
 
 export function createBear(scene: Phaser.Scene, x: number, y: number): Phaser.GameObjects.Sprite {
@@ -67,6 +68,7 @@ export function createSounds(scene: Phaser.Scene): {
     pickSound: Phaser.Sound.BaseSound,
     fryingSound: Phaser.Sound.BaseSound,
     backingSound: Phaser.Sound.BaseSound,
+    cakeSound: Phaser.Sound.BaseSound,
 } {
     const backgroundMusic = scene.sound.add('backgroundMusic', {
         loop: true,
@@ -78,6 +80,7 @@ export function createSounds(scene: Phaser.Scene): {
     const pickSound = scene.sound.add('pickSound', { volume: 1.0 });
     const fryingSound = scene.sound.add('fryingSound', { volume: 0.5 });
     const backingSound = scene.sound.add('backingSound', { volume: 5.0 });
+    const cakeSound = scene.sound.add('cakeSound', { volume: 1.0 });
 
     return {
         backgroundMusic,
@@ -86,5 +89,6 @@ export function createSounds(scene: Phaser.Scene): {
         pickSound,
         fryingSound,
         backingSound,
+        cakeSound,
     };
 }

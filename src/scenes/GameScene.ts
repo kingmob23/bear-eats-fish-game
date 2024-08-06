@@ -4,6 +4,7 @@ import Fish from '../utils/Fish';
 import { createActionButton, createBackground, createBear, createSounds, createSplash, createStove, createTable } from '../utils/SetupUtils';
 
 class GameScene extends Phaser.Scene {
+    private background!: Phaser.GameObjects.Sprite;
     private bear!: Phaser.GameObjects.Sprite;
     private actionButton!: Phaser.GameObjects.Sprite;
     private splash!: Phaser.GameObjects.Sprite;
@@ -16,6 +17,7 @@ class GameScene extends Phaser.Scene {
     private pickSound!: Phaser.Sound.BaseSound;
     private fryingSound!: Phaser.Sound.BaseSound;
     private backingSound!: Phaser.Sound.BaseSound;
+    private cakeSound!: Phaser.Sound.BaseSound;
 
     private screenWidth: number = 0;
     private screenHeight: number = 0;
@@ -65,6 +67,7 @@ class GameScene extends Phaser.Scene {
         this.load.audio('pickSound', 'assets/audio/pick.mp3');
         this.load.audio('fryingSound', 'assets/audio/frying.mp3');
         this.load.audio('backingSound', 'assets/audio/backing.mp3');
+        this.load.audio('cakeSound', 'assets/audio/cake.mp3');
 
         this.load.image('actionButton', 'assets/interface/action-button.svg');
     }
@@ -73,7 +76,7 @@ class GameScene extends Phaser.Scene {
         this.screenWidth = this.cameras.main.width;
         this.screenHeight = this.cameras.main.height;
 
-        createBackground(this, this.screenWidth, this.screenHeight);
+        this.background = createBackground(this, this.screenWidth, this.screenHeight);
 
         this.bear = createBear(this, this.screenWidth / 2, this.screenHeight / 2);
 
@@ -92,6 +95,7 @@ class GameScene extends Phaser.Scene {
         this.pickSound = sounds.pickSound;
         this.fryingSound = sounds.fryingSound;
         this.backingSound = sounds.backingSound;
+        this.cakeSound = sounds.cakeSound;
 
         this.backgroundMusic.play();
 
@@ -205,13 +209,51 @@ class GameScene extends Phaser.Scene {
         if (bakedFish) {
             bakedFish.setTexture('cake');
             bakedFish.setVisible(true);
-            bakedFish.moveToBorder(false);
             if (this.backingSound.isPlaying) {
                 this.backingSound.stop();
             }
+            this.party();
         }
     }
 
+    party() {
+        this.children.each((child) => {
+            if (child !== this.background && child !== this.bear && child !== this.actionButton && !(child instanceof Fish && child.state === 'cake')) {
+                child.destroy();
+            }
+        });
+
+        if (this.moveSound.isPlaying) this.moveSound.stop();
+        if (this.splashSound.isPlaying) this.splashSound.stop();
+        if (this.pickSound.isPlaying) this.pickSound.stop();
+        if (this.fryingSound.isPlaying) this.fryingSound.stop();
+        if (this.backingSound.isPlaying) this.backingSound.stop();
+        if (this.backgroundMusic.isPlaying) this.backgroundMusic.stop();
+
+        this.cakeSound.play();
+
+        this.tweens.add({
+            targets: this.bear,
+            x: this.screenWidth / 2 - this.bear.width * 2,
+            y: this.screenHeight / 2,
+            duration: 300,
+            ease: 'Power3',
+            scale: 3.0,
+        });
+
+        let fish = this.fishArray.find(f => f.state === 'cake');
+        if (fish) {
+            fish.setPartyMode();
+            this.tweens.add({
+                targets: fish,
+                x: this.screenWidth / 2 + fish.width,
+                y: this.screenHeight / 2,
+                duration: 300,
+                ease: 'Power3',
+                scale: 1.0,
+            });
+        }
+    }
 
     handleTableInteraction() {
         Fish.tableSteakPending = false;
@@ -230,13 +272,14 @@ class GameScene extends Phaser.Scene {
         try {
             const fishOffsetX = Phaser.Math.Between(-50, 50);
             const fishOffsetY = Phaser.Math.Between(-50, 50);
+            const tableBounds = this.table.getBounds();
 
             const fish = new Fish(
                 this,
                 this.bear.x + fishOffsetX,
                 this.bear.y + fishOffsetY,
                 this.stove,
-                this.table,
+                tableBounds,
                 this.screenHeight,
                 this.screenWidth,
                 this.pickSound,
