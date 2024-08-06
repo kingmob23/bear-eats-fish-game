@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
-import eventEmitter from '../utils/EventEmitterModule'; // The centralized EventEmitter
+import eventEmitter from '../utils/EventEmitterModule';
 import Fish from '../utils/Fish';
+import { createActionButton, createBackground, createBear, createSounds, createSplash, createStove } from '../utils/SetupUtils';
 
 class GameScene extends Phaser.Scene {
     private bear!: Phaser.GameObjects.Sprite;
@@ -13,82 +14,44 @@ class GameScene extends Phaser.Scene {
     private splashSound!: Phaser.Sound.BaseSound;
     private pickSound!: Phaser.Sound.BaseSound;
 
-    private screenWidth!: number;
-    private screenHeight!: number;
+    private screenWidth: number = 0;
+    private screenHeight: number = 0;
 
-    private buttonActive: boolean;
+    private buttonActive: boolean = false;
 
     private fishArray: Fish[] = [];
+    private activationDistance: number = 0;
 
     constructor() {
         super({ key: 'GameScene' });
         this.buttonActive = false;
 
-        eventEmitter.on('fishFried', () => {
-            Fish.stoveFishPending = true;
-        });
+        eventEmitter.on('fishFried', this.handleFishFried);
     }
 
-    preload() {
-        this.load.image('bear', 'assets/images/cute-bear.webp');
-        this.load.image('background', 'assets/images/background.webp');
-        this.load.image('splash', 'assets/images/splash.webp');
-        this.load.image('fish', 'assets/images/fish.webp');
-        this.load.image('stove', 'assets/images/stove.webp');
-        this.load.image('steak', 'assets/images/steak.webp');
-
-        this.load.audio('backgroundMusic', 'assets/audio/background.mp3');
-        this.load.audio('moveSound', 'assets/audio/move.mp3');
-        this.load.audio('splashSound', 'assets/audio/splash-sound.mp3');
-        this.load.audio('pickSound', 'assets/audio/pick.mp3');
-
-        this.load.image('actionButton', 'assets/interface/action-button.svg');
+    handleFishFried = () => {
+        Fish.stoveFishPending = true;
     }
 
     create() {
         this.screenWidth = this.cameras.main.width;
         this.screenHeight = this.cameras.main.height;
 
-        const background = this.add.image(this.screenWidth / 2, this.screenHeight / 2, 'background');
-        background.setDisplaySize(this.screenWidth, this.screenHeight);
-        background.setDepth(-1);
+        createBackground(this, this.screenWidth, this.screenHeight);
+        this.bear = createBear(this, this.screenWidth / 2, this.screenHeight / 2);
+        this.activationDistance = this.bear.displayHeight;
 
-        this.bear = this.add.sprite(this.screenWidth / 2, this.screenHeight / 2, 'bear');
-        this.bear.setDepth(2);
+        this.actionButton = createActionButton(this, this.screenWidth, this.screenHeight, this.onActionButtonClick.bind(this));
+        this.splash = createSplash(this, this.screenWidth, this.screenHeight);
+        this.stove = createStove(this, this.screenWidth, this.screenHeight);
 
-        const buttonScale = 1.7;
-        const actionButtonPaddingX = this.screenWidth * 0.05;
-        const actionButtonPaddingY = this.screenHeight * 0.05;
-        const actionButtonWidth = this.textures.get('actionButton').getSourceImage().width * buttonScale;
-        const actionButtonHeight = this.textures.get('actionButton').getSourceImage().height * buttonScale;
-        const finalX = this.screenWidth - actionButtonPaddingX - (actionButtonWidth / 2);
-        const finalY = this.screenHeight - actionButtonPaddingY - (actionButtonHeight / 2);
-        this.actionButton = this.add.sprite(finalX, finalY, 'actionButton').setScale(buttonScale);
-        this.actionButton.setAlpha(0.9);
-        this.actionButton.setInteractive();
-        this.actionButton.setDepth(3);
-        this.actionButton.on('pointerdown', this.onActionButtonClick, this);
+        const sounds = createSounds(this);
+        this.backgroundMusic = sounds.backgroundMusic;
+        this.moveSound = sounds.moveSound;
+        this.splashSound = sounds.splashSound;
+        this.pickSound = sounds.pickSound;
 
-        const splashVerticalOffset = this.screenHeight * 0.25;
-        this.splash = this.add.sprite(this.screenWidth / 2, splashVerticalOffset, 'splash');
-        this.splash.setScale(0.4);
-        this.splash.setVisible(false);
-        this.splash.setDepth(1);
-
-        const stoveX = this.screenWidth * 0.8;
-        const stoveY = this.screenHeight * 0.5;
-        this.stove = this.add.sprite(stoveX, stoveY, 'stove').setScale(0.55);
-        this.stove.setDepth(0);
-
-        this.backgroundMusic = this.sound.add('backgroundMusic', {
-            loop: true,
-            volume: 0.2
-        });
         this.backgroundMusic.play();
-
-        this.moveSound = this.sound.add('moveSound', { volume: 1.0 });
-        this.splashSound = this.sound.add('splashSound', { volume: 0.1 });
-        this.pickSound = this.sound.add('pickSound', { volume: 1.0 });
 
         this.input.on('pointerdown', this.moveBear, this);
 
@@ -99,17 +62,21 @@ class GameScene extends Phaser.Scene {
     moveBear(pointer: Phaser.Input.Pointer) {
         if (this.isAnyFishDragging()) return;
 
-        this.moveSound.play({ volume: 3.0 });
-        this.tweens.add({
-            targets: this.bear,
-            x: pointer.x,
-            y: pointer.y,
-            duration: 500,
-            ease: 'Power2',
-            onComplete: () => {
-                this.moveSound.stop();
-            }
-        });
+        try {
+            this.moveSound.play({ volume: 3.0 });
+            this.tweens.add({
+                targets: this.bear,
+                x: pointer.x,
+                y: pointer.y,
+                duration: 500,
+                ease: 'Power2',
+                onComplete: () => {
+                    this.moveSound.stop();
+                }
+            });
+        } catch (error) {
+            console.error('Error moving bear:', error);
+        }
     }
 
     isAnyFishDragging(): boolean {
@@ -134,7 +101,6 @@ class GameScene extends Phaser.Scene {
         this.splash.setVisible(true);
         this.backgroundMusic.pause();
         this.splashSound.play();
-
         this.setButtonActive(true);
     }
 
@@ -143,13 +109,18 @@ class GameScene extends Phaser.Scene {
             this.setButtonActive(false);
             event.stopPropagation();
 
-            const distanceToSplash = Phaser.Math.Distance.Between(this.bear.x, this.bear.y, this.splash.x, this.splash.y);
-            const distanceToStove = Phaser.Math.Distance.Between(this.bear.x, this.bear.y, this.stove.x, this.stove.y);
-            const activationDistance = this.bear.displayHeight;
+            const distanceToSplash = Phaser.Math.Distance.Between(
+                this.bear.x, this.bear.y,
+                this.splash.x, this.splash.y
+            );
+            const distanceToStove = Phaser.Math.Distance.Between(
+                this.bear.x, this.bear.y,
+                this.stove.x, this.stove.y
+            );
 
-            if (distanceToSplash <= activationDistance && this.splash.visible) {
+            if (distanceToSplash <= this.activationDistance && this.splash.visible) {
                 this.handleSplashInteraction();
-            } else if (distanceToStove <= activationDistance && Fish.stoveFishPending) {
+            } else if (distanceToStove <= this.activationDistance && Fish.stoveFishPending) {
                 this.handleStoveInteraction();
             } else {
                 console.log('Button clicked but no valid interaction found!');
@@ -179,22 +150,26 @@ class GameScene extends Phaser.Scene {
     }
 
     spawnFish() {
-        const fishOffsetX = Phaser.Math.Between(-50, 50);
-        const fishOffsetY = Phaser.Math.Between(-50, 50);
+        try {
+            const fishOffsetX = Phaser.Math.Between(-50, 50);
+            const fishOffsetY = Phaser.Math.Between(-50, 50);
 
-        const fish = new Fish(
-            this,
-            this.bear.x + fishOffsetX,
-            this.bear.y + fishOffsetY,
-            'fish',
-            this.stove,
-            this.screenHeight,
-            this.screenWidth,
-            this.pickSound
-        );
-        this.fishArray.push(fish);
+            const fish = new Fish(
+                this,
+                this.bear.x + fishOffsetX,
+                this.bear.y + fishOffsetY,
+                'fish',
+                this.stove,
+                this.screenHeight,
+                this.screenWidth,
+                this.pickSound
+            );
+            this.fishArray.push(fish);
 
-        fish.moveToBorder(false);
+            fish.moveToBorder(false);
+        } catch (error) {
+            console.error('Error spawning fish:', error);
+        }
     }
 
     update() {
@@ -203,6 +178,10 @@ class GameScene extends Phaser.Scene {
 
         this.bear.setDepth(this.bear.y > this.splash.y ? 2 : 1);
         this.splash.setDepth(this.bear.y > this.splash.y ? 1 : 2);
+    }
+
+    destroy() {
+        eventEmitter.off('fishFried', this.handleFishFried);
     }
 }
 
