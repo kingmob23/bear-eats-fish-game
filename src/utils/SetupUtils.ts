@@ -77,7 +77,7 @@ export function createSounds(scene: Phaser.Scene): {
     const splashSound = scene.sound.add('splashSound', { volume: 0.1 });
     const pickSound = scene.sound.add('pickSound', { volume: 1.0 });
     const fryingSound = scene.sound.add('fryingSound', { volume: 0.5 });
-    const backingSound = scene.sound.add('backingSound', { volume: 1.0 });
+    const backingSound = scene.sound.add('backingSound', { volume: 5.0 });
 
     return {
         backgroundMusic,

@@ -3,7 +3,7 @@ import eventEmitter from '../utils/EventEmitterModule'; // The centralized Event
 
 class Fish extends Phaser.GameObjects.Sprite {
     isDragging: boolean;
-    state: 'raw' | 'steak' | 'unbacked';
+    state: 'raw' | 'steak' | 'unbaked' | 'cake';
     private stove: Phaser.GameObjects.Sprite;
     private table: Phaser.GameObjects.Sprite;
     private screenHeight: number;
@@ -11,14 +11,14 @@ class Fish extends Phaser.GameObjects.Sprite {
     private pickSound: Phaser.Sound.BaseSound;
     private fryingSound: Phaser.Sound.BaseSound;
     private backingSound: Phaser.Sound.BaseSound;
-    static stoveFishPending: boolean = false;
+    private moveBear: (pointer: Phaser.Input.Pointer) => void;
+    static stovePending: boolean = false;
     static tableSteakPending: boolean = false;
 
     constructor(
         scene: Phaser.Scene,
         x: number,
         y: number,
-        texture: string,
         stove: Phaser.GameObjects.Sprite,
         table: Phaser.GameObjects.Sprite,
         screenHeight: number,
@@ -26,8 +26,9 @@ class Fish extends Phaser.GameObjects.Sprite {
         pickSound: Phaser.Sound.BaseSound,
         fryingSound: Phaser.Sound.BaseSound,
         backingSound: Phaser.Sound.BaseSound,
+        moveBear: (pointer: Phaser.Input.Pointer) => void,
     ) {
-        super(scene, x, y, texture);
+        super(scene, x, y, 'fish');
         this.scene = scene;
         this.isDragging = false;
         this.state = 'raw';
@@ -38,6 +39,7 @@ class Fish extends Phaser.GameObjects.Sprite {
         this.pickSound = pickSound;
         this.fryingSound = fryingSound;
         this.backingSound = backingSound;
+        this.moveBear = moveBear;
         scene.add.existing(this);
         this.setScale(0.3);
     }
@@ -49,6 +51,7 @@ class Fish extends Phaser.GameObjects.Sprite {
             if (this.scene.tweens.isTweening(this)) return;
             this.setScale(0.3);
             this.isDragging = true;
+            this.scene.input.off('pointerdown', this.moveBear, this.scene);
         });
 
         this.on('drag', (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
@@ -59,23 +62,21 @@ class Fish extends Phaser.GameObjects.Sprite {
         this.on('dragend', (pointer: Phaser.Input.Pointer) => {
             this.isDragging = false;
             this.onDragEnd();
+            this.scene.input.on('pointerdown', this.moveBear, this.scene);
         });
     }
 
     onDragEnd() {
-        if (Fish.stoveFishPending) {
-            this.moveToBorder(false);
-            return;
-        }
-
         const fishBounds = this.getBounds();
         const stoveBounds = this.stove.getBounds();
         const tableBounds = this.table.getBounds();
 
-        if (this.state === 'raw' && Phaser.Geom.Intersects.RectangleToRectangle(fishBounds, stoveBounds)) {
+        if (this.state === 'raw' && Phaser.Geom.Intersects.RectangleToRectangle(fishBounds, stoveBounds) && !Fish.stovePending) {
             this.fry();
         } else if (this.state === 'steak' && Phaser.Geom.Intersects.RectangleToRectangle(fishBounds, tableBounds)) {
             this.coverInDough();
+        } else if (this.state === 'unbaked' && Phaser.Geom.Intersects.RectangleToRectangle(fishBounds, stoveBounds) && !Fish.stovePending) {
+            this.bake();
         } else {
             this.moveToBorder(true);
         }
@@ -83,7 +84,6 @@ class Fish extends Phaser.GameObjects.Sprite {
 
     fry() {
         this.setVisible(false);
-        Fish.stoveFishPending = true;
         this.state = 'steak';
         this.fryingSound.play();
         eventEmitter.emit('fishFried');
@@ -91,10 +91,16 @@ class Fish extends Phaser.GameObjects.Sprite {
 
     coverInDough() {
         this.setVisible(false);
-        Fish.tableSteakPending = true;
-        this.state = 'unbacked';
-        this.backingSound.play()
+        this.state = 'unbaked';
+        this.backingSound.play();
         eventEmitter.emit('steakCovered');
+    }
+
+    bake() {
+        this.setVisible(false);
+        this.state = 'cake';
+        this.fryingSound.play();
+        eventEmitter.emit('fishBaked');
     }
 
     moveToBorder(closest: boolean) {

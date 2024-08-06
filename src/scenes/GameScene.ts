@@ -31,14 +31,19 @@ class GameScene extends Phaser.Scene {
 
         eventEmitter.on('fishFried', this.handleFishFried);
         eventEmitter.on('steakCovered', this.handleSteakCovered);
+        eventEmitter.on('fishBaked', this.handleFishBaked);
     }
 
     handleFishFried = () => {
-        Fish.stoveFishPending = true;
+        Fish.stovePending = true;
     };
 
     handleSteakCovered = () => {
         Fish.tableSteakPending = true;
+    };
+
+    handleFishBaked = () => {
+        Fish.stovePending = true;
     };
 
     preload() {
@@ -48,7 +53,8 @@ class GameScene extends Phaser.Scene {
 
         this.load.image('fish', 'assets/images/fish.webp');
         this.load.image('steak', 'assets/images/steak.webp');
-        this.load.image('unbacked', 'assets/images/unbacked.webp');
+        this.load.image('unbaked', 'assets/images/unbaked.webp');
+        this.load.image('cake', 'assets/images/cake.webp');
 
         this.load.image('stove', 'assets/images/stove.webp');
         this.load.image('table', 'assets/images/table.webp');
@@ -160,7 +166,7 @@ class GameScene extends Phaser.Scene {
 
             if (distanceToSplash <= this.activationDistance && this.splash.visible) {
                 this.handleSplashInteraction();
-            } else if (distanceToStove <= this.activationDistance && Fish.stoveFishPending) {
+            } else if (distanceToStove <= this.activationDistance && Fish.stovePending) {
                 this.handleStoveInteraction();
             } else if (distanceToTable <= this.activationDistance && Fish.tableSteakPending) {
                 this.handleTableInteraction();
@@ -182,7 +188,8 @@ class GameScene extends Phaser.Scene {
 
     handleStoveInteraction() {
         this.setButtonActive(false);
-        Fish.stoveFishPending = false;
+        Fish.stovePending = false;
+
         const friedFish = this.fishArray.find(fish => fish.state === 'steak' && !fish.visible);
         if (friedFish) {
             friedFish.setTexture('steak');
@@ -191,14 +198,26 @@ class GameScene extends Phaser.Scene {
             if (this.fryingSound.isPlaying) {
                 this.fryingSound.stop();
             }
+            return;
+        }
+
+        const bakedFish = this.fishArray.find(fish => fish.state === 'cake' && !fish.visible);
+        if (bakedFish) {
+            bakedFish.setTexture('cake');
+            bakedFish.setVisible(true);
+            bakedFish.moveToBorder(false);
+            if (this.backingSound.isPlaying) {
+                this.backingSound.stop();
+            }
         }
     }
 
+
     handleTableInteraction() {
         Fish.tableSteakPending = false;
-        const steak = this.fishArray.find(fish => fish.state === 'unbacked' && !fish.visible);
+        const steak = this.fishArray.find(fish => fish.state === 'unbaked' && !fish.visible);
         if (steak) {
-            steak.setTexture('unbacked');
+            steak.setTexture('unbaked');
             steak.setVisible(true);
             steak.moveToBorder(false);
             if (this.backingSound.isPlaying) {
@@ -216,7 +235,6 @@ class GameScene extends Phaser.Scene {
                 this,
                 this.bear.x + fishOffsetX,
                 this.bear.y + fishOffsetY,
-                'fish',
                 this.stove,
                 this.table,
                 this.screenHeight,
@@ -224,6 +242,7 @@ class GameScene extends Phaser.Scene {
                 this.pickSound,
                 this.fryingSound,
                 this.backingSound,
+                this.moveBear.bind(this)
             );
             this.fishArray.push(fish);
 
@@ -234,7 +253,7 @@ class GameScene extends Phaser.Scene {
     }
 
     update() {
-        const isActive = this.splash.visible || Fish.stoveFishPending || Fish.tableSteakPending;
+        const isActive = this.splash.visible || Fish.stovePending || Fish.tableSteakPending;
         this.setButtonActive(isActive);
 
         this.bear.setDepth(this.bear.y > this.splash.y ? 2 : 1);
@@ -244,6 +263,7 @@ class GameScene extends Phaser.Scene {
     destroy() {
         eventEmitter.off('fishFried', this.handleFishFried);
         eventEmitter.off('steakCovered', this.handleSteakCovered);
+        eventEmitter.off('fishBaked', this.handleFishBaked)
     }
 }
 
