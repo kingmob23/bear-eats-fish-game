@@ -3,12 +3,16 @@ import eventEmitter from '../utils/EventEmitterModule'; // The centralized Event
 
 class Fish extends Phaser.GameObjects.Sprite {
     isDragging: boolean;
-    state: 'raw' | 'steak';
+    state: 'raw' | 'steak' | 'unbacked';
     private stove: Phaser.GameObjects.Sprite;
+    private table: Phaser.GameObjects.Sprite;
     private screenHeight: number;
     private screenWidth: number;
     private pickSound: Phaser.Sound.BaseSound;
+    private fryingSound: Phaser.Sound.BaseSound;
+    private backingSound: Phaser.Sound.BaseSound;
     static stoveFishPending: boolean = false;
+    static tableSteakPending: boolean = false;
 
     constructor(
         scene: Phaser.Scene,
@@ -16,18 +20,24 @@ class Fish extends Phaser.GameObjects.Sprite {
         y: number,
         texture: string,
         stove: Phaser.GameObjects.Sprite,
+        table: Phaser.GameObjects.Sprite,
         screenHeight: number,
         screenWidth: number,
-        pickSound: Phaser.Sound.BaseSound
+        pickSound: Phaser.Sound.BaseSound,
+        fryingSound: Phaser.Sound.BaseSound,
+        backingSound: Phaser.Sound.BaseSound,
     ) {
         super(scene, x, y, texture);
         this.scene = scene;
         this.isDragging = false;
         this.state = 'raw';
         this.stove = stove;
+        this.table = table;
         this.screenHeight = screenHeight;
         this.screenWidth = screenWidth;
         this.pickSound = pickSound;
+        this.fryingSound = fryingSound;
+        this.backingSound = backingSound;
         scene.add.existing(this);
         this.setScale(0.3);
     }
@@ -60,9 +70,12 @@ class Fish extends Phaser.GameObjects.Sprite {
 
         const fishBounds = this.getBounds();
         const stoveBounds = this.stove.getBounds();
+        const tableBounds = this.table.getBounds();
 
         if (this.state === 'raw' && Phaser.Geom.Intersects.RectangleToRectangle(fishBounds, stoveBounds)) {
             this.fry();
+        } else if (this.state === 'steak' && Phaser.Geom.Intersects.RectangleToRectangle(fishBounds, tableBounds)) {
+            this.coverInDough();
         } else {
             this.moveToBorder(true);
         }
@@ -72,7 +85,16 @@ class Fish extends Phaser.GameObjects.Sprite {
         this.setVisible(false);
         Fish.stoveFishPending = true;
         this.state = 'steak';
+        this.fryingSound.play();
         eventEmitter.emit('fishFried');
+    }
+
+    coverInDough() {
+        this.setVisible(false);
+        Fish.tableSteakPending = true;
+        this.state = 'unbacked';
+        this,this.backingSound.play()
+        eventEmitter.emit('steakCovered');
     }
 
     moveToBorder(closest: boolean) {

@@ -14,6 +14,8 @@ class GameScene extends Phaser.Scene {
     private moveSound!: Phaser.Sound.BaseSound;
     private splashSound!: Phaser.Sound.BaseSound;
     private pickSound!: Phaser.Sound.BaseSound;
+    private fryingSound!: Phaser.Sound.BaseSound;
+    private backingSound!: Phaser.Sound.BaseSound;
 
     private screenWidth: number = 0;
     private screenHeight: number = 0;
@@ -28,25 +30,35 @@ class GameScene extends Phaser.Scene {
         this.buttonActive = false;
 
         eventEmitter.on('fishFried', this.handleFishFried);
-    }
+        eventEmitter.on('steakCovered', this.handlesteakCovered);
+    };
 
     handleFishFried = () => {
         Fish.stoveFishPending = true;
-    }
+    };
+
+    handlesteakCovered = () => {
+        Fish.tableSteakPending = true;
+    };
 
     preload() {
         this.load.image('bear', 'assets/images/cute-bear.webp');
         this.load.image('background', 'assets/images/background.webp');
         this.load.image('splash', 'assets/images/splash.webp');
+
         this.load.image('fish', 'assets/images/fish.webp');
-        this.load.image('stove', 'assets/images/stove.webp');
         this.load.image('steak', 'assets/images/steak.webp');
+        this.load.image('unbacked', 'assets/images/unbacked.webp');
+
+        this.load.image('stove', 'assets/images/stove.webp');
         this.load.image('table', 'assets/images/table.webp');
 
         this.load.audio('backgroundMusic', 'assets/audio/background.mp3');
         this.load.audio('moveSound', 'assets/audio/move.mp3');
         this.load.audio('splashSound', 'assets/audio/splash-sound.mp3');
         this.load.audio('pickSound', 'assets/audio/pick.mp3');
+        this.load.audio('fryingSound', 'assets/audio/frying.mp3');
+        this.load.audio('backingSound', 'assets/audio/backing.mp3');
 
         this.load.image('actionButton', 'assets/interface/action-button.svg');
     }
@@ -72,6 +84,8 @@ class GameScene extends Phaser.Scene {
         this.moveSound = sounds.moveSound;
         this.splashSound = sounds.splashSound;
         this.pickSound = sounds.pickSound;
+        this.fryingSound = sounds.fryingSound;
+        this.backingSound = sounds.backingSound;
 
         this.backgroundMusic.play();
 
@@ -139,11 +153,17 @@ class GameScene extends Phaser.Scene {
                 this.bear.x, this.bear.y,
                 this.stove.x, this.stove.y
             );
+            const distanceToTable = Phaser.Math.Distance.Between(
+                this.bear.x, this.bear.y,
+                this.table.x, this.table.y
+            );
 
             if (distanceToSplash <= this.activationDistance && this.splash.visible) {
                 this.handleSplashInteraction();
             } else if (distanceToStove <= this.activationDistance && Fish.stoveFishPending) {
                 this.handleStoveInteraction();
+            } else if (distanceToTable <= this.activationDistance && Fish.tableSteakPending) {
+                this.handleTableInteraction();
             } else {
                 console.log('Button clicked but no valid interaction found!');
             }
@@ -168,6 +188,18 @@ class GameScene extends Phaser.Scene {
             friedFish.setTexture('steak');
             friedFish.setVisible(true);
             friedFish.moveToBorder(false);
+            this.fryingSound.stop(); // тут или вне иф?
+        }
+    }
+
+    handleTableInteraction() {
+        Fish.tableSteakPending = false;
+        const steak = this.fishArray.find(fish => fish.state === 'unbacked' && fish.visible);
+        if (steak) {
+            steak.setTexture('unbacked');
+            steak.setVisible(true);
+            steak.moveToBorder(false);
+            this.backingSound.stop();
         }
     }
 
@@ -182,9 +214,12 @@ class GameScene extends Phaser.Scene {
                 this.bear.y + fishOffsetY,
                 'fish',
                 this.stove,
+                this.table,
                 this.screenHeight,
                 this.screenWidth,
-                this.pickSound
+                this.pickSound,
+                this.fryingSound,
+                this.backingSound,
             );
             this.fishArray.push(fish);
 
@@ -195,7 +230,7 @@ class GameScene extends Phaser.Scene {
     }
 
     update() {
-        const isActive = this.splash.visible || Fish.stoveFishPending;
+        const isActive = this.splash.visible || Fish.stoveFishPending || Fish.tableSteakPending;
         this.setButtonActive(isActive);
 
         this.bear.setDepth(this.bear.y > this.splash.y ? 2 : 1);
@@ -204,6 +239,7 @@ class GameScene extends Phaser.Scene {
 
     destroy() {
         eventEmitter.off('fishFried', this.handleFishFried);
+        eventEmitter.off('steakCovered', this.handleFishFried);
     }
 }
 
