@@ -19,15 +19,13 @@ class GameScene extends Phaser.Scene {
     private buttonActive: boolean;
 
     private fishArray: Fish[] = [];
-    private stoveFishPending: boolean;
 
     constructor() {
         super({ key: 'GameScene' });
         this.buttonActive = false;
-        this.stoveFishPending = false;
 
         eventEmitter.on('fishFried', () => {
-            this.stoveFishPending = true;
+            Fish.stoveFishPending = true;
         });
     }
 
@@ -151,7 +149,7 @@ class GameScene extends Phaser.Scene {
 
             if (distanceToSplash <= activationDistance && this.splash.visible) {
                 this.handleSplashInteraction();
-            } else if (distanceToStove <= activationDistance && this.stoveFishPending) {
+            } else if (distanceToStove <= activationDistance && Fish.stoveFishPending) {
                 this.handleStoveInteraction();
             } else {
                 console.log('Button clicked but no valid interaction found!');
@@ -171,7 +169,7 @@ class GameScene extends Phaser.Scene {
 
     handleStoveInteraction() {
         this.setButtonActive(false);
-        this.stoveFishPending = false;
+        Fish.stoveFishPending = false;
         const friedFish = this.fishArray.find(fish => fish.state === 'steak' && !fish.visible);
         if (friedFish) {
             friedFish.setTexture('steak');
@@ -200,7 +198,7 @@ class GameScene extends Phaser.Scene {
     }
 
     update() {
-        const isActive = this.splash.visible || this.stoveFishPending;
+        const isActive = this.splash.visible || Fish.stoveFishPending;
         this.setButtonActive(isActive);
 
         this.bear.setDepth(this.bear.y > this.splash.y ? 2 : 1);

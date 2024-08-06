@@ -8,6 +8,7 @@ class Fish extends Phaser.GameObjects.Sprite {
     private screenHeight: number;
     private screenWidth: number;
     private pickSound: Phaser.Sound.BaseSound;
+    static stoveFishPending: boolean = false;
 
     constructor(
         scene: Phaser.Scene,
@@ -52,6 +53,11 @@ class Fish extends Phaser.GameObjects.Sprite {
     }
 
     onDragEnd() {
+        if (Fish.stoveFishPending) {
+            this.moveToBorder(false);
+            return;
+        }
+
         const fishBounds = this.getBounds();
         const stoveBounds = this.stove.getBounds();
 
@@ -64,6 +70,7 @@ class Fish extends Phaser.GameObjects.Sprite {
 
     fry() {
         this.setVisible(false);
+        Fish.stoveFishPending = true;
         this.state = 'steak';
         eventEmitter.emit('fishFried');
     }
