@@ -1,5 +1,5 @@
-import EventEmitter from 'events';
 import Phaser from 'phaser';
+import eventEmitter from '../utils/EventEmitterModule'; // The centralized EventEmitter
 
 class Fish extends Phaser.GameObjects.Sprite {
     isDragging: boolean;
@@ -7,10 +7,18 @@ class Fish extends Phaser.GameObjects.Sprite {
     private stove: Phaser.GameObjects.Sprite;
     private screenHeight: number;
     private screenWidth: number;
-    private eventEmitter: EventEmitter;
-    private pickSound: Phaser.Sound.BaseSound
+    private pickSound: Phaser.Sound.BaseSound;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, texture: string, stove: Phaser.GameObjects.Sprite, screenHeight: number, screenWidth: number, eventEmitter: EventEmitter, pickSound: Phaser.Sound.BaseSound) {
+    constructor(
+        scene: Phaser.Scene,
+        x: number,
+        y: number,
+        texture: string,
+        stove: Phaser.GameObjects.Sprite,
+        screenHeight: number,
+        screenWidth: number,
+        pickSound: Phaser.Sound.BaseSound
+    ) {
         super(scene, x, y, texture);
         this.scene = scene;
         this.isDragging = false;
@@ -18,7 +26,6 @@ class Fish extends Phaser.GameObjects.Sprite {
         this.stove = stove;
         this.screenHeight = screenHeight;
         this.screenWidth = screenWidth;
-        this.eventEmitter = eventEmitter;
         this.pickSound = pickSound;
         scene.add.existing(this);
         this.setScale(0.3);
@@ -58,7 +65,7 @@ class Fish extends Phaser.GameObjects.Sprite {
     fry() {
         this.setVisible(false);
         this.state = 'steak';
-        this.eventEmitter.emit('fishFried');
+        eventEmitter.emit('fishFried');
     }
 
     moveToBorder(closest: boolean) {

@@ -1,5 +1,5 @@
-import EventEmitter from 'events';
 import Phaser from 'phaser';
+import eventEmitter from '../utils/EventEmitterModule'; // The centralized EventEmitter
 import Fish from '../utils/Fish';
 
 class GameScene extends Phaser.Scene {
@@ -19,18 +19,14 @@ class GameScene extends Phaser.Scene {
     private buttonActive: boolean;
 
     private fishArray: Fish[] = [];
-
     private stoveFishPending: boolean;
-
-    private eventEmitter: EventEmitter;
 
     constructor() {
         super({ key: 'GameScene' });
         this.buttonActive = false;
         this.stoveFishPending = false;
-        this.eventEmitter = new EventEmitter();
 
-        this.eventEmitter.on('fishFried', () => {
+        eventEmitter.on('fishFried', () => {
             this.stoveFishPending = true;
         });
     }
@@ -57,9 +53,10 @@ class GameScene extends Phaser.Scene {
 
         const background = this.add.image(this.screenWidth / 2, this.screenHeight / 2, 'background');
         background.setDisplaySize(this.screenWidth, this.screenHeight);
-        background.setDepth(-1)
+        background.setDepth(-1);
 
         this.bear = this.add.sprite(this.screenWidth / 2, this.screenHeight / 2, 'bear');
+        this.bear.setDepth(2);
 
         const buttonScale = 1.7;
         const actionButtonPaddingX = this.screenWidth * 0.05;
@@ -71,16 +68,19 @@ class GameScene extends Phaser.Scene {
         this.actionButton = this.add.sprite(finalX, finalY, 'actionButton').setScale(buttonScale);
         this.actionButton.setAlpha(0.9);
         this.actionButton.setInteractive();
+        this.actionButton.setDepth(3);
         this.actionButton.on('pointerdown', this.onActionButtonClick, this);
 
         const splashVerticalOffset = this.screenHeight * 0.25;
         this.splash = this.add.sprite(this.screenWidth / 2, splashVerticalOffset, 'splash');
         this.splash.setScale(0.4);
         this.splash.setVisible(false);
+        this.splash.setDepth(1);
 
         const stoveX = this.screenWidth * 0.8;
         const stoveY = this.screenHeight * 0.5;
         this.stove = this.add.sprite(stoveX, stoveY, 'stove').setScale(0.55);
+        this.stove.setDepth(0);
 
         this.backgroundMusic = this.sound.add('backgroundMusic', {
             loop: true,
@@ -95,7 +95,6 @@ class GameScene extends Phaser.Scene {
         this.input.on('pointerdown', this.moveBear, this);
 
         this.setButtonActive(false);
-
         this.scheduleNextSplash(2500, 5000);
     }
 
@@ -150,9 +149,9 @@ class GameScene extends Phaser.Scene {
             const distanceToStove = Phaser.Math.Distance.Between(this.bear.x, this.bear.y, this.stove.x, this.stove.y);
             const activationDistance = this.bear.displayHeight;
 
-            if (distanceToSplash <= activationDistance && this.isSplashInteraction()) {
+            if (distanceToSplash <= activationDistance && this.splash.visible) {
                 this.handleSplashInteraction();
-            } else if (distanceToStove <= activationDistance && this.isStoveInteraction()) {
+            } else if (distanceToStove <= activationDistance && this.stoveFishPending) {
                 this.handleStoveInteraction();
             } else {
                 console.log('Button clicked but no valid interaction found!');
@@ -160,19 +159,11 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    isSplashInteraction(): boolean {
-        return this.splash.visible;
-    }
-
-    isStoveInteraction(): boolean {
-        return this.stoveFishPending;
-    }
-
     handleSplashInteraction() {
         this.splash.setVisible(false);
         if (this.splashSound.isPlaying) {
             this.splashSound.stop();
-        };
+        }
         this.backgroundMusic.resume();
         this.spawnFish();
         this.scheduleNextSplash(4000, 10000);
@@ -193,7 +184,16 @@ class GameScene extends Phaser.Scene {
         const fishOffsetX = Phaser.Math.Between(-50, 50);
         const fishOffsetY = Phaser.Math.Between(-50, 50);
 
-        const fish = new Fish(this, this.bear.x + fishOffsetX, this.bear.y + fishOffsetY, 'fish', this.stove, this.screenHeight, this.screenWidth, this.eventEmitter, this.pickSound);
+        const fish = new Fish(
+            this,
+            this.bear.x + fishOffsetX,
+            this.bear.y + fishOffsetY,
+            'fish',
+            this.stove,
+            this.screenHeight,
+            this.screenWidth,
+            this.pickSound
+        );
         this.fishArray.push(fish);
 
         fish.moveToBorder(false);
@@ -201,12 +201,10 @@ class GameScene extends Phaser.Scene {
 
     update() {
         const isActive = this.splash.visible || this.stoveFishPending;
-
         this.setButtonActive(isActive);
 
-        const isBearBehind = this.bear.y > this.splash.y;
-        this.bear.setDepth(isBearBehind ? 1 : 0);
-        this.splash.setDepth(isBearBehind ? 0 : 1);
+        this.bear.setDepth(this.bear.y > this.splash.y ? 2 : 1);
+        this.splash.setDepth(this.bear.y > this.splash.y ? 1 : 2);
     }
 }
 
