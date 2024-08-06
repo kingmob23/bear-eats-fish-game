@@ -14,7 +14,7 @@ class Fish extends Phaser.GameObjects.Sprite {
     private moveBear: (pointer: Phaser.Input.Pointer) => void;
     static stovePending: boolean = false;
     static tableSteakPending: boolean = false;
-    private partyMode: boolean = false;
+    // private partyMode: boolean = false;
 
     constructor(
         scene: Phaser.Scene,
@@ -43,17 +43,20 @@ class Fish extends Phaser.GameObjects.Sprite {
         this.moveBear = moveBear;
         scene.add.existing(this);
         this.setScale(0.3);
+        this.enableDragging();
     }
 
-    setPartyMode() {
-        this.partyMode = true;
-    }
+    // setPartyMode() {
+    //     this.partyMode = true;
+    //     this.disableInteractive();
+    //     console.log('setPartyMode: partyMode enabled');
+    // }
 
     enableDragging() {
-        if (this.partyMode) {
-            console.log('enableDragging: partyMode enabled')
-            return;
-        }
+        // if (this.partyMode) {
+        //     console.log('enableDragging: partyMode enabled, skipping enableDragging');
+        //     return;
+        // }
 
         this.setInteractive({ draggable: true });
 
@@ -62,7 +65,7 @@ class Fish extends Phaser.GameObjects.Sprite {
             this.scene.input.off('pointerdown', this.moveBear, this.scene);
             this.isDragging = true;
             this.setScale(0.3);
-            console.log('enableDragging: dragstart occured')
+            console.log('enableDragging: dragstart occurred');
         });
 
         this.on('drag', (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
@@ -72,12 +75,22 @@ class Fish extends Phaser.GameObjects.Sprite {
 
         this.on('dragend', (pointer: Phaser.Input.Pointer) => {
             this.isDragging = false;
-            this.onDragEnd();
+            // console.log('onDragEnd event: partyMode=', this.partyMode);
+            // if (!this.partyMode) {
+                this.onDragEnd();
+            // } else {
+                // console.log('onDragEnd: partyMode enabled, skipping onDragEnd');
+            // }
             this.scene.input.on('pointerdown', this.moveBear, this.scene);
         });
     }
 
     onDragEnd() {
+        // if (this.partyMode) {
+        //     console.log('onDragEnd: partyMode enabled, skipping onDragEnd');
+        //     return;
+        // }
+
         const fishBounds = this.getBounds();
         const stoveBounds = this.stove.getBounds();
 
@@ -88,6 +101,7 @@ class Fish extends Phaser.GameObjects.Sprite {
         } else if (this.state === 'unbaked' && Phaser.Geom.Intersects.RectangleToRectangle(fishBounds, stoveBounds) && !Fish.stovePending) {
             this.bake();
         } else {
+            console.log('onDragEnd: moving to border');
             this.moveToBorder(true);
         }
     }
@@ -114,6 +128,11 @@ class Fish extends Phaser.GameObjects.Sprite {
     }
 
     moveToBorder(closest: boolean) {
+        // if (this.partyMode) {
+        //     console.log('moveToBorder: partyMode enabled, skipping moveToBorder');
+        //     return;
+        // }
+
         this.pickSound.play();
 
         const fishHeight = this.displayHeight / 2;
@@ -142,19 +161,17 @@ class Fish extends Phaser.GameObjects.Sprite {
             targetPosition = Phaser.Math.RND.pick(borderPositions);
         }
 
+        console.log('moveToBorder: moving to ', targetPosition);
+
         this.scene.tweens.add({
             targets: this,
             x: targetPosition.x,
             y: targetPosition.y,
             duration: 2000,
             ease: 'Power2',
-            scale: 0.5,
-            onComplete: () => {
-                this.enableDragging();
-            }
+            scale: 0.5
         });
     }
-
 }
 
 export default Fish;

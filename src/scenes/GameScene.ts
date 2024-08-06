@@ -23,6 +23,7 @@ class GameScene extends Phaser.Scene {
     private screenHeight: number = 0;
 
     private buttonActive: boolean = false;
+    private afterPartyActive: boolean = false;
 
     private fishArray: Fish[] = [];
     private activationDistance: number = 0;
@@ -68,6 +69,9 @@ class GameScene extends Phaser.Scene {
         this.load.audio('fryingSound', 'assets/audio/frying.mp3');
         this.load.audio('backingSound', 'assets/audio/backing.mp3');
         this.load.audio('cakeSound', 'assets/audio/cake.mp3');
+        this.load.audio('nomnom', 'assets/audio/nomnom.mp3');
+
+        this.load.video('happy', 'assets/video/happy.mp4');
 
         this.load.image('actionButton', 'assets/interface/action-button.svg');
     }
@@ -132,9 +136,6 @@ class GameScene extends Phaser.Scene {
     setButtonActive(active: boolean) {
         this.buttonActive = active;
         this.actionButton.setAlpha(active ? 1 : 0.9);
-        if (!active) {
-            this.tweens.killTweensOf(this.actionButton);
-        }
     }
 
     scheduleNextSplash(min: number, max: number) {
@@ -174,6 +175,8 @@ class GameScene extends Phaser.Scene {
                 this.handleStoveInteraction();
             } else if (distanceToTable <= this.activationDistance && Fish.tableSteakPending) {
                 this.handleTableInteraction();
+            } else if (this.afterPartyActive) {
+                this.cutScene();
             } else {
                 console.log('Button clicked but no valid interaction found!');
             }
@@ -218,7 +221,7 @@ class GameScene extends Phaser.Scene {
 
     party() {
         this.children.each((child) => {
-            if (child !== this.background && child !== this.bear && child !== this.actionButton && !(child instanceof Fish && child.state === 'cake')) {
+            if (child !== this.background && child !== this.bear && child !== this.actionButton) {
                 child.destroy();
             }
         });
@@ -234,25 +237,59 @@ class GameScene extends Phaser.Scene {
 
         this.tweens.add({
             targets: this.bear,
-            x: this.screenWidth / 2 - this.bear.width * 2,
-            y: this.screenHeight / 2,
             duration: 300,
             ease: 'Power3',
-            scale: 3.0,
+            scale: 2.0,
         });
 
-        let fish = this.fishArray.find(f => f.state === 'cake');
-        if (fish) {
-            fish.setPartyMode();
-            this.tweens.add({
-                targets: fish,
-                x: this.screenWidth / 2 + fish.width,
-                y: this.screenHeight / 2,
-                duration: 300,
-                ease: 'Power3',
-                scale: 1.0,
+        const fish = this.add.sprite(this.screenWidth / 2, this.screenHeight / 2, 'cake');
+
+        this.tweens.add({
+            targets: this.actionButton,
+            duration: 400,
+            ease: 'Power4',
+            scale: 4.0,
+        });
+
+        const eatText = this.add.text(this.actionButton.x, this.actionButton.y - 50, 'Eat!', {
+            font: '160px Arial',
+            color: '#ff0000'
+        }).setOrigin(0.5).setDepth(5);
+
+        const arrow2 = this.add.text(this.screenWidth * 0.7, this.screenHeight * 0.6, '⬆', {
+            font: '300px Arial',
+            color: '#ff0000'
+        }).setAngle(90).setDepth(5);
+
+        this.tweens.add({
+            targets: [arrow2],
+            alpha: { from: 1, to: 0 },
+            duration: 500,
+            yoyo: true,
+            repeat: -1
+        });
+
+        this.afterPartyActive = true;
+        this.setButtonActive(true);
+    }
+
+    cutScene() {
+        this.cameras.main.fadeOut(1000, 0, 0, 0, () => {
+            this.cameras.main.setBackgroundColor(0x000000);
+
+            const nomnomSound = this.sound.add('nomnom');
+            nomnomSound.play();
+
+            this.time.delayedCall(4000, () => {
+                this.cameras.main.fadeIn(1000, 255, 255, 255, () => {
+                    this.cameras.main.setBackgroundColor(0xffffff);
+
+                    const video = this.add.video(this.screenWidth / 2, this.screenHeight / 2, 'happy');
+                    video.setDisplaySize(this.screenWidth, this.screenHeight);
+                    video.play(true);
+                });
             });
-        }
+        });
     }
 
     handleTableInteraction() {
@@ -296,7 +333,7 @@ class GameScene extends Phaser.Scene {
     }
 
     update() {
-        const isActive = this.splash.visible || Fish.stovePending || Fish.tableSteakPending;
+        const isActive = this.splash.visible || Fish.stovePending || Fish.tableSteakPending || this.afterPartyActive;
         this.setButtonActive(isActive);
 
         this.bear.setDepth(this.bear.y > this.splash.y ? 2 : 1);
