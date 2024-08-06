@@ -93,7 +93,7 @@ class Fish extends Phaser.GameObjects.Sprite {
         this.setVisible(false);
         Fish.tableSteakPending = true;
         this.state = 'unbacked';
-        this,this.backingSound.play()
+        this.backingSound.play()
         eventEmitter.emit('steakCovered');
     }
 

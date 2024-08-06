@@ -30,14 +30,14 @@ class GameScene extends Phaser.Scene {
         this.buttonActive = false;
 
         eventEmitter.on('fishFried', this.handleFishFried);
-        eventEmitter.on('steakCovered', this.handlesteakCovered);
-    };
+        eventEmitter.on('steakCovered', this.handleSteakCovered);
+    }
 
     handleFishFried = () => {
         Fish.stoveFishPending = true;
     };
 
-    handlesteakCovered = () => {
+    handleSteakCovered = () => {
         Fish.tableSteakPending = true;
     };
 
@@ -188,18 +188,22 @@ class GameScene extends Phaser.Scene {
             friedFish.setTexture('steak');
             friedFish.setVisible(true);
             friedFish.moveToBorder(false);
-            this.fryingSound.stop(); // тут или вне иф?
+            if (this.fryingSound.isPlaying) {
+                this.fryingSound.stop();
+            }
         }
     }
 
     handleTableInteraction() {
         Fish.tableSteakPending = false;
-        const steak = this.fishArray.find(fish => fish.state === 'unbacked' && fish.visible);
+        const steak = this.fishArray.find(fish => fish.state === 'unbacked' && !fish.visible);
         if (steak) {
             steak.setTexture('unbacked');
             steak.setVisible(true);
             steak.moveToBorder(false);
-            this.backingSound.stop();
+            if (this.backingSound.isPlaying) {
+                this.backingSound.stop();
+            }
         }
     }
 
@@ -239,7 +243,7 @@ class GameScene extends Phaser.Scene {
 
     destroy() {
         eventEmitter.off('fishFried', this.handleFishFried);
-        eventEmitter.off('steakCovered', this.handleFishFried);
+        eventEmitter.off('steakCovered', this.handleSteakCovered);
     }
 }
 
