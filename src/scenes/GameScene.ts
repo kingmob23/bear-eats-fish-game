@@ -1,13 +1,14 @@
 import Phaser from 'phaser';
 import eventEmitter from '../utils/EventEmitterModule';
 import Fish from '../utils/Fish';
-import { createActionButton, createBackground, createBear, createSounds, createSplash, createStove } from '../utils/SetupUtils';
+import { createActionButton, createBackground, createBear, createSounds, createSplash, createStove, createTable } from '../utils/SetupUtils';
 
 class GameScene extends Phaser.Scene {
     private bear!: Phaser.GameObjects.Sprite;
     private actionButton!: Phaser.GameObjects.Sprite;
     private splash!: Phaser.GameObjects.Sprite;
     private stove!: Phaser.GameObjects.Sprite;
+    private table!: Phaser.GameObjects.Sprite;
 
     private backgroundMusic!: Phaser.Sound.BaseSound;
     private moveSound!: Phaser.Sound.BaseSound;
@@ -33,17 +34,38 @@ class GameScene extends Phaser.Scene {
         Fish.stoveFishPending = true;
     }
 
+    preload() {
+        this.load.image('bear', 'assets/images/cute-bear.webp');
+        this.load.image('background', 'assets/images/background.webp');
+        this.load.image('splash', 'assets/images/splash.webp');
+        this.load.image('fish', 'assets/images/fish.webp');
+        this.load.image('stove', 'assets/images/stove.webp');
+        this.load.image('steak', 'assets/images/steak.webp');
+        this.load.image('table', 'assets/images/table.webp');
+
+        this.load.audio('backgroundMusic', 'assets/audio/background.mp3');
+        this.load.audio('moveSound', 'assets/audio/move.mp3');
+        this.load.audio('splashSound', 'assets/audio/splash-sound.mp3');
+        this.load.audio('pickSound', 'assets/audio/pick.mp3');
+
+        this.load.image('actionButton', 'assets/interface/action-button.svg');
+    }
+
     create() {
         this.screenWidth = this.cameras.main.width;
         this.screenHeight = this.cameras.main.height;
 
         createBackground(this, this.screenWidth, this.screenHeight);
+
         this.bear = createBear(this, this.screenWidth / 2, this.screenHeight / 2);
+
         this.activationDistance = this.bear.displayHeight;
 
         this.actionButton = createActionButton(this, this.screenWidth, this.screenHeight, this.onActionButtonClick.bind(this));
+
         this.splash = createSplash(this, this.screenWidth, this.screenHeight);
         this.stove = createStove(this, this.screenWidth, this.screenHeight);
+        this.table = createTable(this, this.screenWidth, this.screenHeight)
 
         const sounds = createSounds(this);
         this.backgroundMusic = sounds.backgroundMusic;

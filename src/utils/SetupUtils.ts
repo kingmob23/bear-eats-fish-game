@@ -52,6 +52,14 @@ export function createStove(scene: Phaser.Scene, screenWidth: number, screenHeig
     return stove;
 }
 
+export function createTable(scene: Phaser.Scene, screenWidth: number, screenHeight: number): Phaser.GameObjects.Sprite {
+    const tableX = screenWidth * 0.14;
+    const tableY = screenHeight * 0.57;
+    const table = scene.add.sprite(tableX, tableY, 'table').setScale(0.4);
+    table.setDepth(0);
+    return table;
+}
+
 export function createSounds(scene: Phaser.Scene): {
     backgroundMusic: Phaser.Sound.BaseSound,
     moveSound: Phaser.Sound.BaseSound,
