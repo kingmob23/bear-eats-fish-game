@@ -1,21 +1,22 @@
 {
     "compilerOptions": {
-        "target": "es5",
-        "module": "commonjs",
-        "strict": true,
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "baseUrl": "./src",
-        "paths": {
-            "*": [
-                "node_modules/*"
-            ]
-        },
-        "outDir": "./dist",
-        "rootDir": "./src"
+      "target": "es5",
+      "module": "commonjs",
+      "strict": true,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "baseUrl": "./src",
+      "paths": {
+        "*": [
+          "node_modules/*"
+        ]
+      },
+      "outDir": "./dist",
+      "rootDir": "./src"
     },
     "include": [
-        "src"
+      "src",
+      "webpack.config.js"
     ]
-}
+  }
